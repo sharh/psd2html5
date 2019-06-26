@@ -1,6 +1,4 @@
-﻿//var css = require('./CopyCSSToClipboard');
-//var svg = require('./CopySVGToClipboard');
-function loadFile(path) {
+﻿function loadFile(path) {
   // var file = new File(path);
   $.evalFile(path);
 }
@@ -27,6 +25,11 @@ ProgressBar.prototype.nextProgress = function()
 	this.currentProgress++;
 	return this.updateProgress( this.currentProgress );
 }
+var MpMode = true;
+// 小程序模式的话生成在/mp目录
+var baseFold = MpMode ? '/mp' : '/html'
+var imageTag = MpMode ? 'image' : 'img';
+var divTag = MpMode ? 'view' : 'div';
 var scriptsFile = new File($.fileName);
 var foldName = scriptsFile.parent.fsName;
 var generateFold = foldName + '/' + (app.activeDocument.name.replace(/\..*$/, ''))
@@ -42,7 +45,7 @@ function getPixelLayerName(layer)
   var name = app.$css.layerNameToCSS(layer.name);
   name += '.png'
   return {
-    fullName: generateFold + '/html/' + name,
+    fullName: generateFold + baseFold + '/' + name,
     name: name
   }
 }
@@ -57,6 +60,23 @@ function duplicateToNewDocument(){
   desc78.putInteger(charIDToTypeID("Vrsn"), 5);
   executeAction(charIDToTypeID("Mk  "), desc78, DialogModes.NO);
 };
+// 栅格化文字
+function rasterizeLayer(){
+var idrasterizeLayer = stringIDToTypeID( "rasterizeLayer" );
+    var desc1698 = new ActionDescriptor();
+    var idnull = charIDToTypeID( "null" );
+        var ref770 = new ActionReference();
+        var idLyr = charIDToTypeID( "Lyr " );
+        var idOrdn = charIDToTypeID( "Ordn" );
+        var idTrgt = charIDToTypeID( "Trgt" );
+        ref770.putEnumerated( idLyr, idOrdn, idTrgt );
+    desc1698.putReference( idnull, ref770 );
+    var idWhat = charIDToTypeID( "What" );
+    var idrasterizeItem = stringIDToTypeID( "rasterizeItem" );
+    var idType = charIDToTypeID( "Type" );
+    desc1698.putEnumerated( idWhat, idrasterizeItem, idType );
+executeAction( idrasterizeLayer, desc1698, DialogModes.NO );
+}
 
 function normalizeLayer() {
   // =======================================================转换成智能对象
@@ -210,30 +230,67 @@ function exportLayerToFile(layer, filePath) {
 
 }
 
-
-var styleFold = new Folder(generateFold + '/html');
+var modeValueUnit = MpMode ? 'rpx' : 'px'
+var styleFold = new Folder(generateFold + baseFold);
 styleFold.create();
-var styleFilePath = generateFold + '/html/index.css';
+var styleFilePath = generateFold + baseFold + '/index.'+(MpMode ? 'wxss' : 'css');
 var styleFile = new File(styleFilePath);
-var htmlFile = new File(generateFold + '/html/index.html');
+var htmlFile = new File(generateFold + baseFold + '/index.'+(MpMode ? 'wxml' : 'html'));
 styleFile.open('w');
 htmlFile.open('w');
-var htmlStr = [
+if(MpMode){
+  var jsonFile = new File(generateFold + baseFold + '/index.json');
+  var jsFile = new File(generateFold + baseFold + '/index.js');
+  jsonFile.open('w');
+  jsFile.open('w');
+  jsonFile.writeln('{}')
+  jsFile.writeln('//auto generate file\r\nPage({})')
+}
+var htmlStr = MpMode ? [] : [
 '<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">',
 '<link rel="stylesheet" href="index.css">'
 ];
 
+function flatternLayers() {
+  var layers = app.activeDocument.layers;
+  var flatLayers = [];
+  getLayers(layers, flatLayers)
+  return flatLayers;
+}
+
+function getLayers(layers, arr){
+  for(var i = 0; i < layers.length; i++){
+    var layer = layers[i];
+    if(layer.visible){
+      if(layer.layers && layer.layers.length){
+        getLayers(layer.layers, arr)
+      }else{
+        arr.push(layer)
+      }
+    }
+    
+  }
+}
+
 // 调整尺寸
 changeDocumentSize();
 var layers = app.activeDocument.layers;
-indexLayerName(layers)
-for(var i = 0; i < layers.length; i++){
-  var layer = layers[i];
-  // $.writeln(layer.name);
-  app.$css.setCurrentLayer(layer);
-  app.$css.gatherLayerCSS();
-  styleFile.writeln(app.$css.cssText);
-  cssToClip.reset();
+$.writeln(layers.length)
+app.doProgress( localize("$$$/Photoshop/Progress/CopyCSSProgress=Copying CSS..."),"indexLayerName(layers)" );
+app.doProgress( localize("$$$/Photoshop/Progress/CopyCSSProgress=Copying CSS..."),"getLayersCss(layers)" );
+// indexLayerName(layers)
+// getLayersCss(layers)
+function getLayersCss(layers){
+  for(var i = 0; i < layers.length; i++){
+    var layer = layers[i];
+    // $.writeln(layer.name);
+    app.$css.setCurrentLayer(layer);
+    app.$css.gatherLayerCSS();
+    styleFile.writeln(MpMode ? app.$css.cssText.replace(/px/gim, 'rpx') : app.$css.cssText);
+    cssToClip.reset();
+  }
+  // 小程序中会导致img标签跟位置错开
+  styleFile.writeln('.layer-img{display: block;}');
 }
 
 function changeDocumentSize(size){
@@ -255,14 +312,45 @@ function changeDocumentSize(size){
   executeAction( idImgS, desc1415, DialogModes.NO );
 }
 
+function selectLayer(layer_name){
+  var idslct = charIDToTypeID( "slct" );
+  var desc1544 = new ActionDescriptor();
+  var idnull = charIDToTypeID( "null" );
+  var ref680 = new ActionReference();
+  var idLyr = charIDToTypeID( "Lyr " );
+  ref680.putName( idLyr, layer_name );
+  desc1544.putReference( idnull, ref680 );
+  var idMkVs = charIDToTypeID( "MkVs" );
+  desc1544.putBoolean( idMkVs, false );
+  var idLyrI = charIDToTypeID( "LyrI" );
+  var list555 = new ActionList();
+  list555.putInteger( 78 );
+  desc1544.putList( idLyrI, list555 );
+  executeAction( idslct, desc1544, DialogModes.NO );
+}
+
 function indexLayerName(layers) {
-  for(var i = 0; i < layers.length; i++){
-    var layer = layers[i];
-    if(layer.visible){
-      layer.name = 'layer_'+layerIndex++
-      if(layer.layers){
-        indexLayerName(layer.layers)
+  var progBar = new ProgressBar();
+  progBar.totalProgressSteps = layers.length;
+  for(var j = 0; j < layers.length; j++){
+    var layer = layers[j];
+    (function(layer){
+      selectLayer(layer.name)
+      layer.name = 'layer_'+(layerIndex++)
+      if(layer.visible){
+        $.writeln(layer.name)
+        if(layer.layers && layer.layers.length){
+          indexLayerName(layer.layers)
+        }else{
+          // app.activeDocument.activeLayer = layer
+          normalizeLayer();
+          // selectLayer(layer.name)
+          // layer.name = 'layer_'+(layerIndex++)
+        }
       }
+    })(layer)
+    if(progBar.nextProgress()){
+      $.sleep(80);
     }
   }
 }
@@ -289,11 +377,11 @@ function getLayer(layers) {
       //   textContent = layer.textItem.contents
       // }else{
         layer.allLocked = false;
-        app.activeDocument.activeLayer = layer
-        if(layer.kind === LayerKind.COLORBALANCE){
-          mergeDown()
-          layer = app.activeDocument.activeLayer;
-        }
+        // app.activeDocument.activeLayer = layer
+        // if(layer.kind === LayerKind.COLORBALANCE){
+        //   // mergeDown()
+        //   layer = app.activeDocument.activeLayer;
+        // }
         var picFile = getPixelLayerName(layer);
         (function(layer, picFile) {
           try{
@@ -302,40 +390,43 @@ function getLayer(layers) {
             $.writeln(e.message)
           }
         })(layer, picFile)
-        textContent = '<img class="layer-img" style="width:'+width.value+'px;height: '+height.value+'px;" src="./'+picFile.name+'">'
+        textContent = '<'+ imageTag +' class="layer-img" style="width:'+width.value+modeValueUnit+';height: '+height.value+modeValueUnit+';" src="./'+picFile.name+'"></'+imageTag+'>'
           // $.sleep(5000)
       // }
       htmlStr.push(
-        '<div class="layer '+ app.$css.layerNameToCSS(layer.name) +'">'+textContent+'</div>'
+        '<'+ divTag +' class="layer '+ app.$css.layerNameToCSS(layer.name) +'">'+textContent+'</'+ divTag +'>'
       )
       app.$css.reset();
     }
-    // if(progBar.nextProgress()){
-    //   $.sleep(800);
-    // }
+    if(progBar.nextProgress()){
+      $.sleep(80);
+    }
   }
 }
 // getLayer([app.activeDocument.activeLayer])
 // exportLayerToFile(app.activeDocument.activeLayer, getPixelLayerName(app.activeDocument.activeLayer).fullName)
 
-htmlStr.push('<div class="page-container">')
+htmlStr.push('<'+ divTag +' class="page-container">')
 app.doProgress( localize("$$$/Photoshop/Progress/CopyCSSProgress=Copying CSS..."),"getLayer(layers)" );
 // getLayer(layers);
-htmlStr.push('</div>')
-htmlStr.push('<script>')
-  htmlStr.push('function response(){')
-    htmlStr.push('if(/webview|iphone/i.test(navigator.userAgent)){')
-      htmlStr.push('var viewPort = document.querySelector(\'[name="viewport"]\')')
-      htmlStr.push('var ratio = window.innerWidth/750')
-      htmlStr.push('viewPort.setAttribute("content", "width=device-width, initial-scale="+ratio+", minimum-scale="+ratio+", maximum-scale="+ratio)')
-    htmlStr.push('}else{')
-      htmlStr.push('var pageContainer = document.querySelector(".page-container")')
-      htmlStr.push('var ratio = window.innerWidth/750')
-      htmlStr.push('pageContainer.setAttribute("style", "zoom: " + ratio)')
+htmlStr.push('</'+ divTag +'>')
+// 自适应
+if(!MpMode){
+  htmlStr.push('<script>')
+    htmlStr.push('function response(){')
+      htmlStr.push('if(/webview|iphone/i.test(navigator.userAgent)){')
+        htmlStr.push('var viewPort = document.querySelector(\'[name="viewport"]\')')
+        htmlStr.push('var ratio = window.innerWidth/750')
+        htmlStr.push('viewPort.setAttribute("content", "width=device-width, initial-scale="+ratio+", minimum-scale="+ratio+", maximum-scale="+ratio)')
+      htmlStr.push('}else{')
+        htmlStr.push('var pageContainer = document.querySelector(".page-container")')
+        htmlStr.push('var ratio = window.innerWidth/750')
+        htmlStr.push('pageContainer.setAttribute("style", "zoom: " + ratio)')
+      htmlStr.push('}')
     htmlStr.push('}')
-  htmlStr.push('}')
-  htmlStr.push('response()')
-htmlStr.push('</script>')
+    htmlStr.push('response()')
+  htmlStr.push('</script>')
+}
 htmlFile.writeln(htmlStr.join('\r\n'));
 cssToClip.reset();
 
