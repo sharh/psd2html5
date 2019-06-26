@@ -25,7 +25,9 @@ ProgressBar.prototype.nextProgress = function()
 	this.currentProgress++;
 	return this.updateProgress( this.currentProgress );
 }
-var MpMode = true;
+var MpMode = false;
+// 是否栅格化文字
+var text2img = false;
 // 小程序模式的话生成在/mp目录
 var baseFold = MpMode ? '/mp' : '/html'
 var imageTag = MpMode ? 'image' : 'img';
@@ -335,17 +337,23 @@ function indexLayerName(layers) {
   for(var j = 0; j < layers.length; j++){
     var layer = layers[j];
     (function(layer){
+      // 选择当前图层
       selectLayer(layer.name)
+      // 设置图层名字
       layer.name = 'layer_'+(layerIndex++)
       if(layer.visible){
         $.writeln(layer.name)
         if(layer.layers && layer.layers.length){
           indexLayerName(layer.layers)
-        }else{
+        }else if(!text2img && layer.kind === LayerKind.TEXT){
           // app.activeDocument.activeLayer = layer
-          normalizeLayer();
+          // 不是文字图层的话就给栅格化
+          // normalizeLayer();
           // selectLayer(layer.name)
           // layer.name = 'layer_'+(layerIndex++)
+        }else{
+          // 不是文字图层的话就给栅格化
+          normalizeLayer();
         }
       }
     })(layer)
@@ -373,9 +381,9 @@ function getLayer(layers) {
       var textContent = '';
       // app.$css.setCurrentLayer(layer);
       // var kind = app.$css.currentPSLayerInfo.layerKind;
-      // if(layer.kind === LayerKind.TEXT){
-      //   textContent = layer.textItem.contents
-      // }else{
+      if(!text2img && layer.kind === LayerKind.TEXT){
+        textContent = '<div>' + layer.textItem.contents.replace(/\u000D/gim, '<br>') + '</div>'
+      }else{
         layer.allLocked = false;
         // app.activeDocument.activeLayer = layer
         // if(layer.kind === LayerKind.COLORBALANCE){
@@ -392,7 +400,7 @@ function getLayer(layers) {
         })(layer, picFile)
         textContent = '<'+ imageTag +' class="layer-img" style="width:'+width.value+modeValueUnit+';height: '+height.value+modeValueUnit+';" src="./'+picFile.name+'"></'+imageTag+'>'
           // $.sleep(5000)
-      // }
+      }
       htmlStr.push(
         '<'+ divTag +' class="layer '+ app.$css.layerNameToCSS(layer.name) +'">'+textContent+'</'+ divTag +'>'
       )
@@ -429,8 +437,8 @@ if(!MpMode){
 }
 htmlFile.writeln(htmlStr.join('\r\n'));
 cssToClip.reset();
-
-
+// 打开文件夹
+styleFold.execute()
 // app.$css.setCurrentLayer(app.activeDocument.activeLayer);
 // app.$css.gatherLayerCSS();
 // $.writeln(app.$css.cssText)
