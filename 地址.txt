@@ -1,0 +1,5 @@
+ExtendScript脚本文档地址： https://www.adobe.com/devnet/photoshop/scripting.html
+
+开发文档地址： https://console.adobe.io/downloads/ps
+
+插件市场：https://www.adobeexchange.com/creativecloud.photoshop.html#product
