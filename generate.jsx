@@ -32,7 +32,7 @@ var imageTag = MpMode ? 'image' : 'img';
 var divTag = MpMode ? 'view' : 'div';
 var scriptsFile = new File($.fileName);
 var foldName = scriptsFile.parent.fsName;
-var generateFold = foldName + '/' + (app.activeDocument.name.replace(/\..*$/, ''))
+var generateFold = foldName + '/' + (app.activeDocument.name.replace(/[\.\/\\:"?|<>]+/gim, '_'))
 
 var cssFilePath = foldName + "/CopyCSSToClipboard.jsx";
 var svgFilePath = foldName + "/CopySVGToClipboard.jsx";
