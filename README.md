@@ -30,3 +30,6 @@
 然后将下载的文件解压，注意将含有`Utilities`的文件夹名称改为为`Utilities`，然后放置到PS的安装目录下的`Plug-ins`目录
 
 重启PS，随便操作一下PS，在桌面可以看到`ScriptingListenerJS`,这个文件里面会记录PS的动作
+
+5、脚本使用教程可以参考：http://nullice.com/archives/1822
+
