@@ -4,16 +4,16 @@
 
 # usage
 
-1、Download `ExtendScript toolkit`, drag the `psd2h5.jsx` or `generate.jsx` to it, connect to photoshop2014 or later. Run the script.
+1、下载 `ExtendScript toolkit`, 将`generate.jsx` 拖入工具中, 然后连接到PS(2014及以上版本)。 运行脚本。
 
-2、Or open photoshop2014 or later, `file -> script -> browser`, select `psd2h5.jsx` or `generate.jsx`, it will automatic run the script.
+2、或者打开PS(2014及以上版本), 选择`file -> script -> browser`, 选择 `generate.jsx`, PS会自动执行脚本。
 
-3、When alert an error: `Can not save as web...`, do this:
+3、当运行脚本时，PS提示: `无法保存为Web...(Can not save as web...)`,或者当你导出为`web所用格式`提示错误时，请进行下面的操作:
 
 ```
 1、关闭PS
 2、打开注册表：regedit
-3、打开路径：计算机\HKEY_CURRENT_USER\Software\Adobe\Photoshop\120.0
+3、打开路径：计算机\HKEY_CURRENT_USER\Software\Adobe\Photoshop\120.0  (这里的120.0根据你的PS版本不一样，详细见cep说明)
 4、新建字符串值（DWORD类型）： 
 名称：OverridePhysicalMemoryMB 
 值（10进制）2000

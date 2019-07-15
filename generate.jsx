@@ -1,7 +1,10 @@
-﻿function loadFile(path) {
+﻿// 加载jsx文件，可以理解成html中的创建script标签
+// 但是加载完成后文件中的变量在这个文件中是可用的
+function loadFile(path) {
   // var file = new File(path);
   $.evalFile(path);
 }
+// 定义一个进度条
 function ProgressBar()
 {
 	this.totalProgressSteps = 0;
@@ -25,6 +28,7 @@ ProgressBar.prototype.nextProgress = function()
 	this.currentProgress++;
 	return this.updateProgress( this.currentProgress );
 }
+// 小程序模式
 var MpMode = false;
 // 是否栅格化文字
 var text2img = true;
@@ -43,7 +47,7 @@ var svgFilePath = foldName + "/CopySVGToClipboard.jsx";
 var layerIndex = 0;
 // 加载文件
 loadFile(svgFilePath)
-
+// 获取图层的名字，这里是直接对应相应的图片
 function getPixelLayerName(layer)
 {
   var name = app.$css.layerNameToCSS(layer.name);
@@ -53,6 +57,7 @@ function getPixelLayerName(layer)
     name: name
   }
 }
+// 复制当前文档到一个新的文档，用的 “动作监听器” 得到的脚本
 function duplicateToNewDocument(){
   var desc78 = new ActionDescriptor();
   var ref54 = new ActionReference();
@@ -64,7 +69,7 @@ function duplicateToNewDocument(){
   desc78.putInteger(charIDToTypeID("Vrsn"), 5);
   executeAction(charIDToTypeID("Mk  "), desc78, DialogModes.NO);
 };
-// 栅格化文字
+// 栅格化文字，用的 “动作监听器” 得到的脚本
 function rasterizeLayer(){
 var idrasterizeLayer = stringIDToTypeID( "rasterizeLayer" );
     var desc1698 = new ActionDescriptor();
@@ -81,7 +86,7 @@ var idrasterizeLayer = stringIDToTypeID( "rasterizeLayer" );
     desc1698.putEnumerated( idWhat, idrasterizeItem, idType );
 executeAction( idrasterizeLayer, desc1698, DialogModes.NO );
 }
-
+// 栅格化图层，用的 “动作监听器” 得到的脚本
 function normalizeLayer() {
   // =======================================================转换成智能对象
   var idnewPlacedLayer = stringIDToTypeID( "newPlacedLayer" );
@@ -99,7 +104,7 @@ function normalizeLayer() {
   desc47.putReference( idnull, ref16 );
   executeAction( idrasterizeLayer, desc47, DialogModes.NO );
 }
-
+// 复制图层，用的 “动作监听器” 得到的脚本
 function copyLayer(){
   var idDplc = charIDToTypeID( "Dplc" );
   var desc106 = new ActionDescriptor();
@@ -118,6 +123,7 @@ function copyLayer(){
   desc106.putList( idIdnt, list21 );
   executeAction( idDplc, desc106, DialogModes.NO );
 }
+// 取消图层模板，用的 “动作监听器” 得到的脚本
 function unlinkCanvas(){
   // =======================================================取消图层上的蒙版链接
   var idsetd = charIDToTypeID( "setd" );
@@ -137,7 +143,7 @@ function unlinkCanvas(){
   desc316.putObject( idT, idLyr, desc317 );
   executeAction( idsetd, desc316, DialogModes.NO );
 }
-
+// 复制当前图层到新的文档，用的 “动作监听器” 得到的脚本
 function copyLayerToNewDocument(){
   // =======================================================
   var idMk = charIDToTypeID( "Mk  " );
@@ -158,7 +164,7 @@ function copyLayerToNewDocument(){
   desc140.putInteger( idVrsn, 5 );
   executeAction( idMk, desc140, DialogModes.NO );
 }
-
+// 向下合并图层，用的 “动作监听器” 得到的脚本
 function mergeDown() {
   // 向下合并
   // =======================================================
@@ -261,7 +267,7 @@ function flatternLayers() {
   getLayers(layers, flatLayers)
   return flatLayers;
 }
-
+// 获取所有图层，只针对可见图层
 function getLayers(layers, arr){
   for(var i = 0; i < layers.length; i++){
     var layer = layers[i];
@@ -286,6 +292,7 @@ app.doProgress( localize("$$$/Photoshop/Progress/CopyCSSProgress=Copying CSS..."
 app.doProgress( localize("$$$/Photoshop/Progress/CopyCSSProgress=Copying CSS..."),"getLayersCss(layers)" );
 // indexLayerName(layers)
 // getLayersCss(layers)
+// 获取图层样式
 function getLayersCss(layers){
   for(var i = 0; i < layers.length; i++){
     var layer = layers[i];
@@ -302,7 +309,7 @@ function getLayersCss(layers){
     styleFile.writeln('*{box-sizing: border-box;}');
   }
 }
-
+// 改变文档的图像大小，用的 “动作监听器” 得到的脚本
 function changeDocumentSize(size){
   size = size || 1920;
   // =======================================================
@@ -321,7 +328,7 @@ function changeDocumentSize(size){
   desc1415.putEnumerated( idIntr, idIntp, idautomaticInterpolation );
   executeAction( idImgS, desc1415, DialogModes.NO );
 }
-
+// 选择图层，根据图层名称，用的 “动作监听器” 得到的脚本
 function selectLayer(layer_name){
   var idslct = charIDToTypeID( "slct" );
   var desc1544 = new ActionDescriptor();
@@ -338,7 +345,7 @@ function selectLayer(layer_name){
   desc1544.putList( idLyrI, list555 );
   executeAction( idslct, desc1544, DialogModes.NO );
 }
-
+// 这里是将图层重新命名，防止有些图层名重复
 function indexLayerName(layers) {
   var progBar = new ProgressBar();
   progBar.totalProgressSteps = layers.length;
@@ -370,7 +377,7 @@ function indexLayerName(layers) {
     }
   }
 }
-
+// 导出图层，并生成html
 function getLayer(layers) {
   var progBar = new ProgressBar();
   progBar.totalProgressSteps = layers.length;
@@ -423,6 +430,7 @@ function getLayer(layers) {
 // exportLayerToFile(app.activeDocument.activeLayer, getPixelLayerName(app.activeDocument.activeLayer).fullName)
 
 htmlStr.push('<'+ divTag +' class="page-container">')
+// 生成一个ui层的进度条
 app.doProgress( localize("$$$/Photoshop/Progress/CopyCSSProgress=Copying CSS..."),"getLayer(layers)" );
 // getLayer(layers);
 htmlStr.push('</'+ divTag +'>')
