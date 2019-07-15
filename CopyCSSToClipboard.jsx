@@ -1014,7 +1014,7 @@ cssToClip.reset = function()
 	this.pluginName = "CSSToClipboard";
 	this.cssText = "";
 	this.indentSpaces = "";
-	this.browserTags = ["-moz-", "-webkit-", "-ms-"];
+	this.browserTags = ["-moz-", "-webkit-", "-ms-", ""];
 	this.currentLayer = null;
 	this.currentPSLayerInfo = null;
 
@@ -1872,7 +1872,32 @@ cssToClip.layerNameToCSS = function( layerName )
 		layerName = "_" + layerName;
 	return layerName;
 }
+cssToClip.gatherLayerBorder = function(boundsInfo){
+	// If we have AGM stroke style info, generate that.
+	var agmDesc = this.getLayerAttr( "AGMStrokeStyleInfo" );
+	boundsInfo.borderWidth = 0;
+	var opacity = this.getLayerAttr("opacity" );
+	
+	if (agmDesc && agmDesc.getVal( "strokeEnabled"))
+	{
+		// Assumes pixels!
+		boundsInfo.borderWidth = makeUnitVal(agmDesc.getVal( "strokeStyleLineWidth" ));
+		this.addStyleLine( "border-width: $strokeStyleLineWidth$;", agmDesc );
+		this.addStyleLine( "border-color: $strokeStyleContent.color$;", agmDesc );
+		var cap = agmDesc.getVal( "strokeStyleLineCapType" );
+		var dashes = agmDesc.getVal( "strokeStyleLineDashSet", false );
 
+		if (dashes && dashes.length > 0)
+		{
+			if ((cap == "strokeStyleRoundCap") && (dashes[0] == 0))
+				this.addStyleLine("border-style: dotted;" );
+			if ((cap == "strokeStyleButtCap") && (dashes[0] > 0))
+				this.addStyleLine("border-style: dashed;");
+		}
+		else
+			this.addStyleLine("border-style: solid;");
+	}
+}
 // Gather the CSS info for the current layer, and add it to this.cssText
 // Returns FALSE if the process was aborted.
 cssToClip.gatherLayerCSS = function()
@@ -1894,7 +1919,7 @@ cssToClip.gatherLayerCSS = function()
 	this.addText( "." + layerName + " {" );
 	this.pushIndent();
 	var boundsInfo = new BoundsParameters();
-
+	this.gatherLayerBorder(boundsInfo);
 	switch (layerKind)
 	{
 	case kLayerGroupSheet:	this.pushGroupLevel();		break;

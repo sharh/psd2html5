@@ -27,7 +27,7 @@ ProgressBar.prototype.nextProgress = function()
 }
 var MpMode = false;
 // 是否栅格化文字
-var text2img = false;
+var text2img = true;
 // 小程序模式的话生成在/mp目录
 var baseFold = MpMode ? '/mp' : '/html'
 var imageTag = MpMode ? 'image' : 'img';
@@ -273,7 +273,8 @@ function getLayers(layers, arr){
     
   }
 }
-
+// 设置尺寸为px
+app.preferences.rulerUnits = Units.PIXELS;
 // 调整尺寸
 changeDocumentSize();
 var layers = app.activeDocument.layers;
@@ -296,7 +297,7 @@ function getLayersCss(layers){
 }
 
 function changeDocumentSize(size){
-  size = size || 750;
+  size = size || 1920;
   // =======================================================
   var idImgS = charIDToTypeID( "ImgS" );
   var desc1415 = new ActionDescriptor();
