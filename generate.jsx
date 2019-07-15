@@ -34,7 +34,9 @@ var imageTag = MpMode ? 'image' : 'img';
 var divTag = MpMode ? 'view' : 'div';
 var scriptsFile = new File($.fileName);
 var foldName = scriptsFile.parent.fsName;
-var generateFold = foldName + '/' + (app.activeDocument.name.replace(/[\.\/\\:"?|<>]+/gim, '_'))
+var psdFileName = new File(app.activeDocument.fullName)
+var psdFoldName = psdFileName.parent.fsName;
+var generateFold = psdFoldName + '/' + (app.activeDocument.name.replace(/[\.\/\\:"?|<>]+/gim, '_'))
 
 var cssFilePath = foldName + "/CopyCSSToClipboard.jsx";
 var svgFilePath = foldName + "/CopySVGToClipboard.jsx";
@@ -276,7 +278,8 @@ function getLayers(layers, arr){
 // 设置尺寸为px
 app.preferences.rulerUnits = Units.PIXELS;
 // 调整尺寸
-changeDocumentSize();
+const documentSize = 1920;
+changeDocumentSize(documentSize);
 var layers = app.activeDocument.layers;
 $.writeln(layers.length)
 app.doProgress( localize("$$$/Photoshop/Progress/CopyCSSProgress=Copying CSS..."),"indexLayerName(layers)" );
@@ -294,6 +297,10 @@ function getLayersCss(layers){
   }
   // 小程序中会导致img标签跟位置错开
   styleFile.writeln('.layer-img{display: block;}');
+  if(!MpMode){
+    styleFile.writeln('html,body{margin: 0; padding: 0;width: 100%;}');
+    styleFile.writeln('*{box-sizing: border-box;}');
+  }
 }
 
 function changeDocumentSize(size){
@@ -425,11 +432,11 @@ if(!MpMode){
     htmlStr.push('function response(){')
       htmlStr.push('if(/webview|iphone/i.test(navigator.userAgent)){')
         htmlStr.push('var viewPort = document.querySelector(\'[name="viewport"]\')')
-        htmlStr.push('var ratio = window.innerWidth/750')
+        htmlStr.push('var ratio = window.innerWidth/'+documentSize)
         htmlStr.push('viewPort.setAttribute("content", "width=device-width, initial-scale="+ratio+", minimum-scale="+ratio+", maximum-scale="+ratio)')
       htmlStr.push('}else{')
         htmlStr.push('var pageContainer = document.querySelector(".page-container")')
-        htmlStr.push('var ratio = window.innerWidth/750')
+        htmlStr.push('var ratio = window.innerWidth/'+documentSize)
         htmlStr.push('pageContainer.setAttribute("style", "zoom: " + ratio)')
       htmlStr.push('}')
     htmlStr.push('}')
